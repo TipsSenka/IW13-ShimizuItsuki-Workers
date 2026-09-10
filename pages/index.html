@@ -1,11 +1,260 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>フロントエンド</title>
+    <title>Senka API Console</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1d2b2a;
+        --muted: #637371;
+        --paper: #f5f2e9;
+        --panel: #fffdf7;
+        --line: #d8ded5;
+        --accent: #e36443;
+        --accent-dark: #a43b28;
+        --teal: #1e7770;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 85% 8%, #f8d8bd 0, transparent 26rem),
+          var(--paper);
+        font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      }
+
+      main {
+        width: min(1040px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 56px 0 72px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin-bottom: 38px;
+      }
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent-dark);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+      }
+      h1 {
+        margin: 0;
+        font-family: Georgia, serif;
+        font-size: clamp(42px, 7vw, 78px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+      .intro {
+        max-width: 290px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 1.25fr;
+        gap: 18px;
+      }
+      section {
+        border: 1px solid var(--line);
+        background: color-mix(in srgb, var(--panel) 92%, transparent);
+        box-shadow: 8px 8px 0 #dfe4d8;
+      }
+      .controls {
+        padding: 28px;
+      }
+      label {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        font: inherit;
+      }
+      input,
+      select {
+        margin-bottom: 22px;
+        padding: 0 13px;
+        color: var(--ink);
+        background: #fff;
+      }
+      button {
+        border-color: var(--accent);
+        color: #fff;
+        background: var(--accent);
+        cursor: pointer;
+        font-weight: 700;
+        transition:
+          background 0.2s,
+          transform 0.2s;
+      }
+      button:hover {
+        background: var(--accent-dark);
+        transform: translateY(-2px);
+      }
+      button:disabled {
+        cursor: wait;
+        opacity: 0.6;
+        transform: none;
+      }
+      .status {
+        min-height: 24px;
+        margin: 20px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status.error {
+        color: var(--accent-dark);
+      }
+      .result {
+        min-width: 0;
+        padding: 28px;
+        background: var(--ink);
+        color: #eef2e7;
+      }
+      .result h2 {
+        margin: 0 0 16px;
+        color: #f4c5a6;
+        font-size: 14px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      pre {
+        overflow: auto;
+        min-height: 290px;
+        margin: 0;
+        padding: 20px;
+        background: #253937;
+        color: #d7ead5;
+        font:
+          14px/1.7 Consolas,
+          monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      footer {
+        margin-top: 34px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      @media (max-width: 720px) {
+        main {
+          width: min(100% - 28px, 520px);
+          padding-top: 34px;
+        }
+        header {
+          display: block;
+        }
+        .intro {
+          margin-top: 18px;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
-    <p>フロントエンドのページです。</p>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">WORKERS / API PLAYGROUND</p>
+          <h1>Senka<br />Console</h1>
+        </div>
+        <p class="intro">
+          Cloudflare Workerに接続して、用意されたAPIのレスポンスを確認します。
+        </p>
+      </header>
+
+      <div class="workspace">
+        <section class="controls" aria-labelledby="controls-title">
+          <label id="controls-title" for="base-url">WorkerベースURL</label>
+          <input
+            id="base-url"
+            type="url"
+            value="http://127.0.0.1:8787"
+            autocomplete="url"
+          />
+
+          <label for="endpoint">エンドポイント</label>
+          <select id="endpoint">
+            <option value="course">course / 講座一覧</option>
+            <option value="hello">hello / あいさつ</option>
+            <option value="fortune">fortune / 今日の運勢</option>
+            <option value="events">events / イベント一覧</option>
+          </select>
+
+          <label for="name">名前（helloのみ）</label>
+          <input id="name" type="text" placeholder="山田" maxlength="80" />
+          <button id="request" type="button">APIを実行する</button>
+          <p id="status" class="status" role="status">
+            Workerの起動を確認してから実行してください。
+          </p>
+        </section>
+
+        <section class="result" aria-labelledby="result-title">
+          <h2 id="result-title">Response</h2>
+          <pre id="result">ここにJSONレスポンスが表示されます。</pre>
+        </section>
+      </div>
+      <footer>静的ページ: Cloudflare Pages / API: Cloudflare Workers</footer>
+    </main>
+
+    <script>
+      const baseUrl = document.querySelector("#base-url");
+      const endpoint = document.querySelector("#endpoint");
+      const name = document.querySelector("#name");
+      const requestButton = document.querySelector("#request");
+      const status = document.querySelector("#status");
+      const result = document.querySelector("#result");
+
+      requestButton.addEventListener("click", async () => {
+        const url = new URL(`/api/${endpoint.value}`, baseUrl.value.trim());
+        if (endpoint.value === "hello" && name.value.trim()) {
+          url.searchParams.set("name", name.value.trim());
+        }
+
+        requestButton.disabled = true;
+        status.className = "status";
+        status.textContent = "リクエスト中...";
+        try {
+          const response = await fetch(url);
+          const body = await response.json();
+          result.textContent = JSON.stringify(body, null, 2);
+          status.textContent = `${response.status} ${response.statusText || "完了"}`;
+          if (!response.ok) status.className = "status error";
+        } catch (error) {
+          result.textContent = JSON.stringify(
+            { error: "Workerへ接続できませんでした。", detail: error.message },
+            null,
+            2,
+          );
+          status.className = "status error";
+          status.textContent = "接続エラー";
+        } finally {
+          requestButton.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>
